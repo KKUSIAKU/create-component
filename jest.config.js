@@ -6,5 +6,13 @@ module.exports = {
   //   "^.*\\.scss$": "<rootDir>/jest.style.js",// replace any scss file with fake jest.style.js 
   // }
 
-  setupFiles:['./enzyme.config.js']
+  setupFiles:['./enzyme.config.js'],
+  coverageThreshold: {
+    "global": {
+      "branches": 95,
+      "functions": 100,
+      "lines": 98,
+      "statements": 100
+    }
+  }
 };

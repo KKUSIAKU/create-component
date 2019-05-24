@@ -54,7 +54,8 @@ export function createDataTagedElement(data,element){
 // used once 
 export function createStyledElement(handler, element, prop){
   if( prop == 'class') return ReactTypedElement('className', () => handler,element)
-  if(prop =='data')  return createDataTagedElement(handler, element)
+  if(prop =='id') return ReactTypedElement('id', () => handler, element)
+  if(prop == 'ariaLabel') return ReactTypedElement('ariaLabel',() => handler,element)
 
   return ReactTypedElement(prop, handler, element );
 }
@@ -75,7 +76,8 @@ export function createFocusableElement(handler, element){
 
 
 const matcher = {
-  data:createStyledElement,
+  id:createStyledElement,
+  ariaLabel: createStyledElement,
   class:createStyledElement,
   click:createClickableElement,
   hover:createHoverableElement,
@@ -119,7 +121,7 @@ function createFunctionalComponent({
     _props = $props;
   }
   
- let {$type, className, data, aria, ...finalProps } = _props || {};
+ let {$type, className, data, ariaLabel, id, ...finalProps } = _props || {};
  
    function  wrappeComponent(arg){
 
@@ -159,8 +161,12 @@ function createFunctionalComponent({
     }
     
     console.log(className)
+    // some function need to be exectuted and return primive value such number or string 
+    // concern class, id, aria 
     return createElement(type, { 
       className: className ? className():'',
+      id: id ? id():'',
+      'aria-label': ariaLabel? ariaLabel():'',
        ...finalProps },
         children );
   }

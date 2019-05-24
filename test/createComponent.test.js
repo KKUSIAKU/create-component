@@ -13,6 +13,7 @@ import React from 'react';
 // runtime instruction (lifecyle method operation is then ) is then removed from the component definiton 
 // 
 
+let test = render(<div class="dda" id="my-id"></div>)
 
 function getError(func){
   try{
@@ -104,12 +105,23 @@ describe('createComponent function test', () => {
         expect(actual).to.equal(expected);
       })
 
-      it('shoud set aria attribute ', () => {
-        expect(true).to.be.false;
+      it('shoud set aria-label attribute ', () => {
+        let setting = { config:{ariaLabel:'my-label'}};
+        let Component = createComponent(setting)
+        let renderedComponent =  shallow(<Component/>)
+        let expected = setting.config.ariaLabel  ,
+        actual = renderedComponent.render().attr('aria-label')
+        expect(actual).to.equal(expected);
       })
 
       it('should set id attribute ', () => {
-        expect(true).to.be.false;
+        let setting = { config:{id:'my-id'}};
+        let Component = createComponent(setting)
+        let renderedComponent =  shallow(<Component/>)
+        let expected = setting.config.id  ,
+        actual = renderedComponent.render().attr('id')
+        expect(actual).to.equal(expected);
+  
       })
 
       // 
@@ -120,8 +132,22 @@ describe('createComponent function test', () => {
 
   describe('Event handling by the returned component by createComponent', () => {
     var Component;
-  it('Expect unit test', () => {
-    expect(true).to.be.false;
+  it('Should execute onclick event handler', () => {
+    let setting = { config:{click:() => 'clicked'}};
+    let clickSpy = sinon.spy(setting.config,'click');
+
+    let Component = createComponent(setting)
+    let renderedComponent =  shallow(<Component/>)
+    let expected = false ,
+    actual = clickSpy.called
+    expect(actual).to.equal(expected);
+
+     renderedComponent.simulate('click');
+     expected = !expected;
+     actual = clickSpy.called;
+     let expectedCallCount = 1, actualCallCount = clickSpy.callCount;
+     expect(actual).to.equal(expected);
+     expect(actualCallCount).to.equal(expectedCallCount)
   })
 
 

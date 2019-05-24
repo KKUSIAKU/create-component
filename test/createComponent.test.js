@@ -89,26 +89,48 @@ describe('createComponent function test', () => {
     const actualStateValue = renderedElement.text();
     expect( actualStateValue ).to.equal(expectedStateValue)
  })
-
+  })
 
 
   })
 
 
-  describe('Event attaching to created object', () => {
-    var Component;
-    var setting =  {
-      config:{
-        click:() => console.log('have being click')
-     }
-    };
+  describe('Could receive config to set and pass props to rendered element ', () => {
+    describe('Case of stateless component ', () => {
+      it('should set className attribute ', () => {
+        let Component = createComponent({ config:{class:'my-class'}})
+        let renderedComponent =  shallow(<Component/>)
+        let expected = true , actual =renderedComponent.hasClass('my-class')
+        expect(actual).to.equal(expected);
+      })
 
-    var onClickSpy = sinon.spy(setting.config, 'click' )
+      it('shoud set aria attribute ', () => {
+        expect(true).to.be.false;
+      })
 
-    beforeEach(() => {
-     Component = createComponent(setting);
+      it('should set id attribute ', () => {
+        expect(true).to.be.false;
+      })
+
+      // 
     })
 
+
+  })
+
+  describe('Event handling by the returned component by createComponent', () => {
+    var Component;
+  it('Expect unit test', () => {
+    expect(true).to.be.false;
+  })
+
+
+  it('Should enforce event reserved words to be function ', () => {
+    const configs = [{click: null}, {click:'string'},{click:{}}]
+    configs.forEach( config => {
+      expect(() => shallow(<ComponentWithState/>).state()).to.throws()
+    })
+  } )
     // it(' Should have attached the click event handler to the element', () => {
     //   let instance = shallow(<Component/>)
     //  instance.simulate('click');
@@ -118,7 +140,9 @@ describe('createComponent function test', () => {
     //   expect(onClickSpy.callCount).to.equal(1)
     // })
   })
-  })
+
+
+
   // describe('createComponent statefull result testing ', () => {
   //   it(' Should re-render on click event ', () =>{
   //     expect(true).to.be.false

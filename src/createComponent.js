@@ -1,5 +1,3 @@
-'use strict'
-
 import React from 'react';
 import invariant from 'invariant';
 import { isFunction } from 'util';
@@ -16,7 +14,7 @@ var REACT_TYPED_ELEMENT = 'REACT_TYPED_ELEMENT';
  */
 var ReactTypedElement = function createTypedElement(prop, func,  parent){
   var element = {
-    type: REACT_TYPED_ELEMENT,
+    $type: REACT_TYPED_ELEMENT,
     // single react node component
     // content:null,
     // prop:null, 
@@ -45,9 +43,19 @@ var ReactTypedElement = function createTypedElement(prop, func,  parent){
 }
 
 
+export function createDataTagedElement(data,element){
+  var $element = element;
+ for(var keyName in data){
+  $element = ReactTypedElement(`data-${keyName}`, () => data[keyName])
+ }
+ return $element;
+}
 
 // used once 
-export function createStyledElement(prop, handler, element){
+export function createStyledElement(handler, element, prop){
+  if( prop == 'class') return ReactTypedElement('className', () => handler,element)
+  if(prop =='data')  return createDataTagedElement(handler, element)
+
   return ReactTypedElement(prop, handler, element );
 }
 
@@ -67,6 +75,8 @@ export function createFocusableElement(handler, element){
 
 
 const matcher = {
+  data:createStyledElement,
+  class:createStyledElement,
   click:createClickableElement,
   hover:createHoverableElement,
   focus:createFocusableElement
@@ -103,12 +113,13 @@ function createFunctionalComponent({
 
   if( Object.keys(config).length){
     for( var keyName in config){
-      $element = matcher[keyName](config[keyName], $element)
+      $element = matcher[keyName](config[keyName], $element, keyName)
     }
     let { $type, ...$props} = $element
     _props = $props;
   }
-
+  
+ let {$type, className, data, aria, ...finalProps } = _props || {};
  
    function  wrappeComponent(arg){
 
@@ -140,14 +151,18 @@ function createFunctionalComponent({
         }
 
         render(){
-          return createElement(type, _props, this.runChildBuilder());
+          return createElement(type, { className, ...finalProps }, this.runChildBuilder());
         }
       }
 
       return Component;
     }
     
-    return createElement(type, _props, children );
+    console.log(className)
+    return createElement(type, { 
+      className: className ? className():'',
+       ...finalProps },
+        children );
   }
   
 

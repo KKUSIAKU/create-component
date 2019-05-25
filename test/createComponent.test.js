@@ -13,7 +13,7 @@ import React from 'react';
 // runtime instruction (lifecyle method operation is then ) is then removed from the component definiton 
 // 
 
-let test = render(<div class="dda" id="my-id"></div>)
+
 
 function getError(func){
   try{
@@ -124,7 +124,18 @@ describe('createComponent function test', () => {
   
       })
 
-      // 
+      describe('Config attributes or properties could be either function or primities', () => {
+        it('Should render element with identical class attribute with config using string or function that returns same string', () => {
+          let configOne = {config:{class:'my-class'}};
+          let configTwo = {config:{class:() =>'my-class'}};
+          let ComponentOne = createComponent(configOne);
+          let ComponentTwo = createComponent(configTwo);
+          // let renderedComponent =  shallow(<Component/>)
+          let expected = true ,
+          actual =shallow(<ComponentOne/>).hasClass('my-class') && shallow(<ComponentTwo/>).hasClass('my-class')
+          expect(actual).to.equal(expected);
+        })
+      })
     })
 
 
@@ -157,16 +168,18 @@ describe('createComponent function test', () => {
       expect(() => shallow(<ComponentWithState/>).state()).to.throws()
     })
   } )
-    // it(' Should have attached the click event handler to the element', () => {
-    //   let instance = shallow(<Component/>)
-    //  instance.simulate('click');
-    //  console.log(shallow(<div onClick={()=>null}></div>).props().click)
-    //  console.log(instance.html())
-    //   expect(instance.prop('click')).to.be.a('function');
-    //   expect(onClickSpy.callCount).to.equal(1)
-    // })
   })
 
+  describe('Component creation with multiple field setting ', () => {
+    it('should not throws with config with multiple field', () => {
+      const click = ()  => { console.log(2)};
+      const test = 'mx-3';
+      let Component = createComponent({ config:{ click, class:'mx-3'}}) ;
+      let renderedComponent = shallow(<Component/>)
+      expect(() => shallow(<Component/>)).to.not.throws()
+    })
+
+  })
 
 
   // describe('createComponent statefull result testing ', () => {

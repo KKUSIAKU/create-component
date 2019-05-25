@@ -1,6 +1,6 @@
 import React from 'react';
 import invariant from 'invariant';
-import { isFunction } from 'util';
+import { isFunction, isPrimitive } from 'util';
 
 var REACT_TYPED_ELEMENT = 'REACT_TYPED_ELEMENT';
 
@@ -15,10 +15,6 @@ var REACT_TYPED_ELEMENT = 'REACT_TYPED_ELEMENT';
 var ReactTypedElement = function createTypedElement(prop, func,  parent){
   var element = {
     $type: REACT_TYPED_ELEMENT,
-    // single react node component
-    // content:null,
-    // prop:null, 
-    
   }
 
   invariant(
@@ -32,8 +28,8 @@ var ReactTypedElement = function createTypedElement(prop, func,  parent){
   )
 
   if(parent){
-    for( propName in parent){
-      element[propName] = ancestor[parent];
+    for(let  propName in parent){
+      element[propName] = parent[propName];
     }
   }
 
@@ -43,45 +39,32 @@ var ReactTypedElement = function createTypedElement(prop, func,  parent){
 }
 
 
-export function createDataTagedElement(data,element){
-  var $element = element;
- for(var keyName in data){
-  $element = ReactTypedElement(`data-${keyName}`, () => data[keyName])
- }
- return $element;
-}
-
 // used once 
-export function createStyledElement(handler, element, prop){
-  if( prop == 'class') return ReactTypedElement('className', () => handler,element)
-  if(prop =='id') return ReactTypedElement('id', () => handler, element)
-  if(prop == 'ariaLabel') return ReactTypedElement('ariaLabel',() => handler,element)
+export function createAttributesElement(prop,handler, element){
+  let resolver; 
+  if(isPrimitive(handler)) {
+     resolver = () => handler
+  }
+  if(isFunction(handler)) {
+    resolver = handler
+  }
 
-  return ReactTypedElement(prop, handler, element );
-}
-
-export function createClickableElement(handler, element){
-  return ReactTypedElement('onClick', handler, element)
-}
-
-export function createHoverableElement(handler, element){
-  return ReactTypedElement('onHover', handler, element)
-}
-
-export function createFocusableElement(handler, element){
-  return ReactTypedElement('onFocus', handler, element)
+  return ReactTypedElement(prop, resolver, element );
 }
 
 
+export function createInterActiveElement(eventType, handler, element){
+  return ReactTypedElement(eventType, handler, element)
+}
 
 
 const matcher = {
-  id:createStyledElement,
-  ariaLabel: createStyledElement,
-  class:createStyledElement,
-  click:createClickableElement,
-  hover:createHoverableElement,
-  focus:createFocusableElement
+  id:createAttributesElement.bind(null, 'id'),
+  ariaLabel: createAttributesElement.bind(null,'ariaLabel'),
+  class:createAttributesElement.bind(null, 'className'),
+  click:createInterActiveElement.bind(null,'onClick'),
+  hover:createInterActiveElement.bind(null,'onHover'),
+  focus:createInterActiveElement.bind(null,'onFucos'),
 }
 
 // provide an api for setting css and forward props, reference ...
@@ -159,8 +142,7 @@ function createFunctionalComponent({
 
       return Component;
     }
-    
-    console.log(className)
+
     // some function need to be exectuted and return primive value such number or string 
     // concern class, id, aria 
     return createElement(type, { 

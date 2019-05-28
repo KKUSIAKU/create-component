@@ -1,9 +1,8 @@
 import React from 'react';
 import invariant from 'invariant';
 import { isFunction, isPrimitive } from 'util';
-
+import executeOperation from './executeOperation';
 var REACT_TYPED_ELEMENT = 'REACT_TYPED_ELEMENT';
-
 
 /**
  * Factory method defining react component with a custom api 
@@ -63,7 +62,7 @@ const matcher = {
   ariaLabel: createAttributesElement.bind(null,'ariaLabel'),
   class:createAttributesElement.bind(null, 'className'),
   click:createInterActiveElement.bind(null,'onClick'),
-  hover:createInterActiveElement.bind(null,'onHover'),
+  mouseover:createInterActiveElement.bind(null,'onMouseOver'),
   focus:createInterActiveElement.bind(null,'onFucos'),
 }
 
@@ -105,29 +104,62 @@ function createFunctionalComponent({
   }
   
  let {$type, className, data, ariaLabel, id, ...finalProps } = _props || {};
- 
+   function getEventHandlers(setting) {
+     let { onClick, onMouseOver, onFocus } = setting;
+    return   {
+      onClick,
+      onMouseOver,
+      onFocus
+    }
+   }
    function  wrappeComponent(arg){
 
     const { children,state } = arg;
 
     if(state) { 
       // create statefull component and return the new function 
+        invariant(
+          !children,
+          'You are trying to build a stateful component with creatComponent method' +
+          'with children props. Provide render method props instead to buil the DOM rendered children '
+        )
+
       class Component extends React.Component{
         constructor(props){
           super(props);
           this.state = {
             ...state
           }
+          this.events = getEventHandlers(finalProps);
           const { render } = this.props;
           invariant(
             render, 
             'Expected render function to build content'
           )
+          this.eventManager = this.eventManager.bind(this)
         }
 
         eventManager(e){
+        let  eventType = e.type;
+          const { events, props, state } = this;
+          let callback = events[eventType];
           e.preventDefault();
+          if(callback){
+            let command = callback(props, state);
+            executeOperation(this,command)
+          }
+
         }
+
+      listenEvent = (eventsConfigs) => {
+        var subjet = {};
+        for(let key in this.events) {
+          subjet[key] = this.eventManager;
+        }
+
+        return subjet
+
+      }
 
         runChildBuilder() {
           const { render, ...restProps } = this.props;
@@ -136,7 +168,11 @@ function createFunctionalComponent({
         }
 
         render(){
-          return createElement(type, { className, ...finalProps }, this.runChildBuilder());
+          return createElement(type, {
+            className: className ? className():'',
+            id: id ? id():'',
+            'aria-label': ariaLabel? ariaLabel():'', ...this.listenEvent(this.events) }, 
+            this.runChildBuilder());
         }
       }
 
@@ -153,8 +189,6 @@ function createFunctionalComponent({
         children );
   }
   
-
-
   return wrappeComponent; 
  
 }

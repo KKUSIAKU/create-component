@@ -13,7 +13,10 @@ import React from 'react';
 // runtime instruction (lifecyle method operation is then ) is then removed from the component definiton 
 // 
 
-
+var syntheticEvent = {
+  type:'onClick',
+  preventDefault:() => null
+}
 
 function getError(func){
   try{
@@ -138,13 +141,61 @@ describe('createComponent function test', () => {
       })
     })
 
+    describe('Case of statefull component ', () => {
+      it('should set className attribute ', () => {
+        let Component = createComponent({ config:{class:'my-class'}})({state:{}})
+        let renderedComponent =  shallow(<Component render = {() =>null}/>)
+        let expected = true , actual =renderedComponent.hasClass('my-class')
+        expect(actual).to.equal(expected);
+      })
 
+      it('shoud set aria-label attribute ', () => {
+        let setting = { config:{ariaLabel:'my-label'}};
+        let Component = createComponent(setting)({state:{}})
+        let renderedComponent =  shallow(<Component render = {() =>null}/>)
+        let expected = setting.config.ariaLabel  ,
+        actual = renderedComponent.render().attr('aria-label')
+        expect(actual).to.equal(expected);
+      })
+
+      it('should set id attribute ', () => {
+        let setting = { config:{id:'my-id'}};
+        let Component = createComponent(setting)({state:{}})
+        let renderedComponent =  shallow(<Component render = {() =>null}/>)
+        let expected = setting.config.id  ,
+        actual = renderedComponent.render().attr('id')
+        expect(actual).to.equal(expected);
+      })
+
+      describe('Config attributes or properties could be either function or primities', () => {
+        it('Should render element with identical class attribute with config using string or function that returns same string', () => {
+          let configOne = {config:{class:'my-class'}};
+          let configTwo = {config:{class:() =>'my-class'}};
+          let ComponentOne = createComponent(configOne)({state:{}});
+          let ComponentTwo = createComponent(configTwo)({state:{}});
+          // let renderedComponent =  shallow(<Component/>)
+          let expected = true ,
+          actual =shallow(<ComponentOne render = {() =>null}/>).hasClass('my-class') && shallow(<ComponentTwo render = {() =>null}/>).hasClass('my-class')
+          expect(actual).to.equal(expected);
+        })
+      })
+    })
   })
 
   describe('Event handling by the returned component by createComponent', () => {
+  
+
+    it('Should enforce event reserved words to be function ', () => {
+      const configs = [{click: null}, {click:'string'},{click:{}}]
+      configs.forEach( config => {
+        expect(() => shallow(<ComponentWithState/>).state()).to.throws()
+      })
+    } )
+
+  describe('Case of stateless component ', () => {
     var Component;
   it('Should execute onclick event handler', () => {
-    let setting = { config:{click:() => 'clicked'}};
+    let setting = { config:{click:() =>{ return {action:'update', className:'clicked'}} }};
     let clickSpy = sinon.spy(setting.config,'click');
 
     let Component = createComponent(setting)
@@ -153,22 +204,37 @@ describe('createComponent function test', () => {
     actual = clickSpy.called
     expect(actual).to.equal(expected);
 
-     renderedComponent.simulate('click');
+     renderedComponent.simulate('click', syntheticEvent);
      expected = !expected;
      actual = clickSpy.called;
      let expectedCallCount = 1, actualCallCount = clickSpy.callCount;
      expect(actual).to.equal(expected);
      expect(actualCallCount).to.equal(expectedCallCount)
   })
-
-
-  it('Should enforce event reserved words to be function ', () => {
-    const configs = [{click: null}, {click:'string'},{click:{}}]
-    configs.forEach( config => {
-      expect(() => shallow(<ComponentWithState/>).state()).to.throws()
-    })
-  } )
   })
+
+
+  describe('Case of statefull component ', () => {
+    var Component;
+  it('Should execute onclick event handler', () => {
+    let setting = { config:{click:() => 'clicked'}};
+    let clickSpy = sinon.spy(setting.config,'click');
+
+    let Component = createComponent(setting)({state:{}})
+    let renderedComponent =  shallow(<Component  render = {() =>null}/>)
+    let expected = false ,
+    actual = clickSpy.called
+    expect(actual).to.equal(expected);
+
+     renderedComponent.simulate('click', syntheticEvent);
+     expected = !expected;
+     actual = clickSpy.called;
+     let expectedCallCount = 1, actualCallCount = clickSpy.callCount;
+     expect(actual).to.equal(expected);
+     expect(actualCallCount).to.equal(expectedCallCount)
+  })
+  })
+})
 
   describe('Component creation with multiple field setting ', () => {
     it('should not throws with config with multiple field', () => {
@@ -182,18 +248,36 @@ describe('createComponent function test', () => {
   })
 
 
-  // describe('createComponent statefull result testing ', () => {
-  //   it(' Should re-render on click event ', () =>{
-  //     expect(true).to.be.false
-  //   })
+  describe('createComponent statefull return component re-rendering ', () => {
+    var Component;
+    it(' Should re-render on click event ', () =>{
+      let render =sinon.spy();
+      let setting = { config:{click:() => 'clicked'}};
+      let clickSpy = sinon.spy(setting.config,'click');
+      let componentRenderSpy; 
+      let Element = createComponent(setting)({state:{}})
+      componentRenderSpy = sinon.spy(Element.prototype,'render');
+      Component = <Element  render = {render}/>;
+      let  renderedComponent = shallow(Component)
+      expect(componentRenderSpy.called).to.equal(true);
+      expect(componentRenderSpy.callCount).to.equal(1)
+      expect(render.called).to.equal(true);
+      expect(render.callCount).to.equal(1)
+ 
+      renderedComponent.simulate('click', syntheticEvent);
+      expect(clickSpy.called).to.equal(true);
+      expect(clickSpy.callCount).to.equal(1)
+      expect(componentRenderSpy.callCount).to.equal(2)
+      expect(render.callCount).to.equal(2)
+    })
 
-  //   it('should re-render while provide value change ',() => {
-  //     expect(true).to.be.false
-  //   })
+    // it('should re-render while provide value change ',() => {
+    //   expect(true).to.be.false
+    // })
 
-  //   it('Should execute lifecycle methods ', () => {
-  //     expect(true).to.be.false
-  //   })
-  // })
+    // it('Should execute lifecycle methods ', () => {
+    //   expect(true).to.be.false
+    // })
+  })
 
 })

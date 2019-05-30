@@ -252,12 +252,14 @@ describe('createComponent function test', () => {
     var Component;
     it(' Should re-render on click event ', () =>{
       let render =sinon.spy();
-      let setting = { config:{click:() => 'clicked'}};
+      let setting = { config:{click:() =>({type:'UPDATE', target:'className'})}};
       let clickSpy = sinon.spy(setting.config,'click');
       let componentRenderSpy; 
       let Element = createComponent(setting)({state:{}})
+
       componentRenderSpy = sinon.spy(Element.prototype,'render');
       Component = <Element  render = {render}/>;
+      
       let  renderedComponent = shallow(Component)
       expect(componentRenderSpy.called).to.equal(true);
       expect(componentRenderSpy.callCount).to.equal(1)
@@ -271,13 +273,44 @@ describe('createComponent function test', () => {
       expect(render.callCount).to.equal(2)
     })
 
-    // it('should re-render while provide value change ',() => {
-    //   expect(true).to.be.false
-    // })
 
-    // it('Should execute lifecycle methods ', () => {
-    //   expect(true).to.be.false
-    // })
+
+
+    it('should re-render on click event and update the className props of the component', () => {
+      let render =sinon.spy();
+      let setting = { config:{class:'class initial value', click:() => ({type:'UPDATE',target:'className',value:'class new value'})}};
+      let clickSpy = sinon.spy(setting.config,'click');
+      let componentRenderSpy; 
+      let Element = createComponent(setting)({state:{}})
+
+      componentRenderSpy = sinon.spy(Element.prototype,'render');
+      Component = <Element  render = {render}/>;
+      
+      let  renderedComponent = shallow(Component)
+      expect(componentRenderSpy.called).to.equal(true);
+      expect(componentRenderSpy.callCount).to.equal(1)
+      expect(render.called).to.equal(true);
+      expect(render.callCount).to.equal(1);
+      let expectedClassCheck = true , actualClassCheck =renderedComponent.hasClass('class initial value')
+      // let expected = true , actual =renderedComponent.hasClass('class initial value')
+       expect(expectedClassCheck).to.equal(actualClassCheck);
+
+
+ 
+      renderedComponent.simulate('click', syntheticEvent);
+      expect(clickSpy.called).to.equal(true);
+      expect(clickSpy.callCount).to.equal(1)
+      expect(componentRenderSpy.callCount).to.equal(2)
+      expect(render.callCount).to.equal(2)
+
+      actualClassCheck =renderedComponent.hasClass('class initial value');
+      expect(!expectedClassCheck).to.equal(actualClassCheck);
+
+
+      actualClassCheck =renderedComponent.hasClass('class new value')
+      expect(expectedClassCheck).to.equal(actualClassCheck)
+    })
+
   })
 
 })

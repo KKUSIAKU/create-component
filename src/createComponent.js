@@ -137,6 +137,8 @@ function createFunctionalComponent({
             'Expected render function to build content'
           )
           this.eventManager = this.eventManager.bind(this)
+     
+          this.classNameController  = className || void '' ; //new AbortController();
         }
 
         eventManager(e){
@@ -169,7 +171,7 @@ function createFunctionalComponent({
 
         render(){
           return createElement(type, {
-            className: className ? className():'',
+            className: this.classNameController ? this.classNameController() :'',
             id: id ? id():'',
             'aria-label': ariaLabel? ariaLabel():'', ...this.listenEvent(this.events) }, 
             this.runChildBuilder());

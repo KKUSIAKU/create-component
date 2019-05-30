@@ -30,10 +30,10 @@ import * as action from './constants';
   // )
   if(args && args.type === action.UPDATE){
    void  classOperation(context,args);
-    context.setState({})
+    
   }
+  context.setState({})
 
-   
  }
 
 

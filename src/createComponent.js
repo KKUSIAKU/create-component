@@ -105,7 +105,11 @@ function createFunctionalComponent({
   
  let {$type, className, data, ariaLabel, id, ...finalProps } = _props || {};
    function getEventHandlers(setting) {
-     let { onClick, onMouseOver, onFocus } = setting;
+     let { 
+          onClick,
+          onMouseOver, 
+          onFocus,
+        } = setting;
     return   {
       onClick,
       onMouseOver,
@@ -144,7 +148,7 @@ function createFunctionalComponent({
         eventManager(e){
         let  eventType = e.type;
           const { events, props, state } = this;
-          let callback = events[eventType];
+          let callback = events[mapEventTypeToHandler(eventType)];
           e.preventDefault();
           if(callback){
             let command = callback(props, state);
@@ -195,4 +199,16 @@ function createFunctionalComponent({
  
 }
 
+
+function mapEventTypeToHandler(type){
+  switch(type){
+    case 'click':
+      return 'onClick'
+    case 'mouveover':
+      return 'onMouseOver';
+    default:
+      return void 0;
+  }
+
+}
 export default createFunctionalComponent;

@@ -2,6 +2,7 @@ import React from 'react';
 import invariant from 'invariant';
 import { isFunction, isPrimitive } from 'util';
 import executeOperation from './executeOperation';
+import {getEventHandlers}  from './eventMapper';
 var REACT_TYPED_ELEMENT = 'REACT_TYPED_ELEMENT';
 
 /**
@@ -104,18 +105,18 @@ function createFunctionalComponent({
   }
   
  let {$type, className, data, ariaLabel, id, ...finalProps } = _props || {};
-   function getEventHandlers(setting) {
-     let { 
-          onClick,
-          onMouseOver, 
-          onFocus,
-        } = setting;
-    return   {
-      onClick,
-      onMouseOver,
-      onFocus
-    }
-   }
+  //  function getEventHandlers(setting) {
+  //    let { 
+  //         onClick,
+  //         onMouseOver, 
+  //         onFocus,
+  //       } = setting;
+  //   return   {
+  //     onClick,
+  //     onMouseOver,
+  //     onFocus
+  //   }
+  //  }
    function  wrappeComponent(arg){
 
     const { children,state } = arg;

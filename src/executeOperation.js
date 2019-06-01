@@ -32,6 +32,7 @@ import * as action from './constants';
    void  classOperation(context,args);
     
   }
+  context.updateCount = context.updateCount +1;
   context.setState({})
 
  }

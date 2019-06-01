@@ -217,7 +217,7 @@ function mapEventTypeToHandler(type){
   switch(type){
     case 'click':
       return 'onClick'
-    case 'mouveover':
+    case 'mouseover':
       return 'onMouseOver';
     default:
       return void 0;

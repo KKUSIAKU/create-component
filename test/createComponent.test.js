@@ -14,7 +14,7 @@ import React from 'react';
 // 
 
 var syntheticEvent = {
-  type:'onClick',
+  type:'click',
   preventDefault:() => null
 }
 

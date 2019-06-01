@@ -105,18 +105,7 @@ function createFunctionalComponent({
   }
   
  let {$type, className, data, ariaLabel, id, ...finalProps } = _props || {};
-  //  function getEventHandlers(setting) {
-  //    let { 
-  //         onClick,
-  //         onMouseOver, 
-  //         onFocus,
-  //       } = setting;
-  //   return   {
-  //     onClick,
-  //     onMouseOver,
-  //     onFocus
-  //   }
-  //  }
+
    function  wrappeComponent(arg){
 
     const { children,state } = arg;
@@ -142,9 +131,32 @@ function createFunctionalComponent({
             'Expected render function to build content'
           )
           this.eventManager = this.eventManager.bind(this)
-     
-          this.classNameController  = className || void '' ; //new AbortController();
+          this.loaded = false;
+          this.updateCount = 0;
+          this.classNameController  = className ||  function () { return ''} ; //new AbortController();
         }
+        componentDidMount(){
+         Object.defineProperty(this,'loaded', {
+           value:true
+          });
+          
+        }
+
+        getSubProps() {
+          let {
+            loaded, 
+            updateCount,
+            classNameController
+          } = this;
+
+          return {
+            loaded,
+            updateCount,
+            className:classNameController()
+          }
+        }
+
+
 
         eventManager(e){
         let  eventType = e.type;
@@ -152,7 +164,7 @@ function createFunctionalComponent({
           let callback = events[mapEventTypeToHandler(eventType)];
           e.preventDefault();
           if(callback){
-            let command = callback(props, state);
+            let command = callback(props, state, this.getSubProps());
             executeOperation(this,command)
           }
 

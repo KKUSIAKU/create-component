@@ -62,9 +62,16 @@ const matcher = {
   id:createAttributesElement.bind(null, 'id'),
   ariaLabel: createAttributesElement.bind(null,'ariaLabel'),
   class:createAttributesElement.bind(null, 'className'),
+
+  // mouse events 
   click:createInterActiveElement.bind(null,'onClick'),
-  mouseover:createInterActiveElement.bind(null,'onMouseOver'),
+  blur:createInterActiveElement.bind(null,'onBlur'),
+  doubleclick:createInterActiveElement.bind(null,'onDoubleClick'),
   focus:createInterActiveElement.bind(null,'onFucos'),
+  mouseover:createInterActiveElement.bind(null,'onMouseOver'),
+  mouseleave:createInterActiveElement.bind(null,'onMouseLeave'),
+  mouseup:createInterActiveElement.bind(null,'onMouseUp'),
+  mousedown:createInterActiveElement.bind(null,'onMouseDown')
 }
 
 // provide an api for setting css and forward props, reference ...

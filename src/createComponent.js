@@ -2,7 +2,7 @@ import React from 'react';
 import invariant from 'invariant';
 import { isFunction, isPrimitive } from 'util';
 import executeOperation from './executeOperation';
-import {getEventHandlers}  from './eventMapper';
+import { getEventHandlers } from './eventMapper';
 var REACT_TYPED_ELEMENT = 'REACT_TYPED_ELEMENT';
 
 /**
@@ -12,23 +12,23 @@ var REACT_TYPED_ELEMENT = 'REACT_TYPED_ELEMENT';
  * it should retur and an objec to that matchs a state slice of the component
  * '@param {object} ancestor a ReactTypedElement
  */
-var ReactTypedElement = function createTypedElement(prop, func,  parent){
+var ReactTypedElement = function createTypedElement(prop, func, parent) {
   var element = {
     $type: REACT_TYPED_ELEMENT,
   }
 
   invariant(
     prop,
-    'View builder a valid prop' 
+    'View builder a valid prop'
   )
 
   invariant(
-    isFunction(func), 
+    isFunction(func),
     'Second argument must be func'
   )
 
-  if(parent){
-    for(let  propName in parent){
+  if (parent) {
+    for (let propName in parent) {
       element[propName] = parent[propName];
     }
   }
@@ -40,38 +40,38 @@ var ReactTypedElement = function createTypedElement(prop, func,  parent){
 
 
 // used once 
-export function createAttributesElement(prop,handler, element){
-  let resolver; 
-  if(isPrimitive(handler)) {
-     resolver = () => handler
+export function createAttributesElement(prop, handler, element) {
+  let resolver;
+  if (isPrimitive(handler)) {
+    resolver = () => handler
   }
-  if(isFunction(handler)) {
+  if (isFunction(handler)) {
     resolver = handler
   }
 
-  return ReactTypedElement(prop, resolver, element );
+  return ReactTypedElement(prop, resolver, element);
 }
 
 
-export function createInterActiveElement(eventType, handler, element){
+export function createInterActiveElement(eventType, handler, element) {
   return ReactTypedElement(eventType, handler, element)
 }
 
 
 const matcher = {
-  id:createAttributesElement.bind(null, 'id'),
-  ariaLabel: createAttributesElement.bind(null,'ariaLabel'),
-  class:createAttributesElement.bind(null, 'className'),
+  id: createAttributesElement.bind(null, 'id'),
+  ariaLabel: createAttributesElement.bind(null, 'ariaLabel'),
+  class: createAttributesElement.bind(null, 'className'),
 
   // mouse events 
-  click:createInterActiveElement.bind(null,'onClick'),
-  blur:createInterActiveElement.bind(null,'onBlur'),
-  doubleclick:createInterActiveElement.bind(null,'onDoubleClick'),
-  focus:createInterActiveElement.bind(null,'onFucos'),
-  mouseover:createInterActiveElement.bind(null,'onMouseOver'),
-  mouseleave:createInterActiveElement.bind(null,'onMouseLeave'),
-  mouseup:createInterActiveElement.bind(null,'onMouseUp'),
-  mousedown:createInterActiveElement.bind(null,'onMouseDown')
+  click: createInterActiveElement.bind(null, 'onClick'),
+  blur: createInterActiveElement.bind(null, 'onBlur'),
+  doubleclick: createInterActiveElement.bind(null, 'onDoubleClick'),
+  focus: createInterActiveElement.bind(null, 'onFocus'),
+  mouseover: createInterActiveElement.bind(null, 'onMouseOver'),
+  mouseleave: createInterActiveElement.bind(null, 'onMouseLeave'),
+  mouseup: createInterActiveElement.bind(null, 'onMouseUp'),
+  mousedown: createInterActiveElement.bind(null, 'onMouseDown')
 }
 
 // provide an api for setting css and forward props, reference ...
@@ -83,12 +83,12 @@ const matcher = {
 // to update the component
 
 function createFunctionalComponent({
- createElement = React.createElement,
- type = 'div',
- config = {},
- element = {},
- component =null 
-}={}){
+  createElement = React.createElement,
+  type = 'div',
+  config = {},
+  element = {},
+  component = null
+} = {}) {
 
   invariant(
     !(!Boolean(type) && !Boolean(component)),
@@ -97,36 +97,36 @@ function createFunctionalComponent({
 
   invariant(
     !(Boolean(type) && Boolean(component)),
-    'CreateComponent called with forbiden input. You are trying to use both type and component together. Use only one.'+
+    'CreateComponent called with forbiden input. You are trying to use both type and component together. Use only one.' +
     'type should correspond a valid HTMLS tagName and component must be a react element constructor function or class'
   );
 
   let $element, _props;
 
-  if( Object.keys(config).length){
-    for( var keyName in config){
+  if (Object.keys(config).length) {
+    for (var keyName in config) {
       $element = matcher[keyName](config[keyName], $element, keyName)
     }
-    let { $type, ...$props} = $element
+    let { $type, ...$props } = $element
     _props = $props;
   }
-  
- let {$type, className, data, ariaLabel, id, ...finalProps } = _props || {};
 
-   function  wrappeComponent(arg){
+  let { $type, className, data, ariaLabel, id, ...finalProps } = _props || {};
 
-    const { children,state } = arg;
+  function wrappeComponent(arg) {
 
-    if(state) { 
+    const { children, state } = arg;
+
+    if (state) {
       // create statefull component and return the new function 
-        invariant(
-          !children,
-          'You are trying to build a stateful component with creatComponent method' +
-          'with children props. Provide render method props instead to buil the DOM rendered children '
-        )
+      invariant(
+        !children,
+        'You are trying to build a stateful component with creatComponent method' +
+        'with children props. Provide render method props instead to buil the DOM rendered children '
+      )
 
-      class Component extends React.Component{
-        constructor(props){
+      class Component extends React.Component {
+        constructor(props) {
           super(props);
           this.state = {
             ...state
@@ -134,24 +134,24 @@ function createFunctionalComponent({
           this.events = getEventHandlers(finalProps);
           const { render } = this.props;
           invariant(
-            render, 
+            render,
             'Expected render function to build content'
           )
           this.eventManager = this.eventManager.bind(this)
           this.loaded = false;
           this.updateCount = 0;
-          this.classNameController  = className ||  function () { return ''} ; //new AbortController();
+          this.classNameController = className || function () { return '' }; //new AbortController();
         }
-        componentDidMount(){
-         Object.defineProperty(this,'loaded', {
-           value:true
+        componentDidMount() {
+          Object.defineProperty(this, 'loaded', {
+            value: true
           });
-          
+
         }
 
         getSubProps() {
           let {
-            loaded, 
+            loaded,
             updateCount,
             classNameController
           } = this;
@@ -159,33 +159,33 @@ function createFunctionalComponent({
           return {
             loaded,
             updateCount,
-            className:classNameController()
+            className: classNameController()
           }
         }
 
 
 
-        eventManager(e){
-        let  eventType = e.type;
+        eventManager(e) {
+          let eventType = e.type;
           const { events, props, state } = this;
           let callback = events[mapEventTypeToHandler(eventType)];
           e.preventDefault();
-          if(callback){
+          if (callback) {
             let command = callback(props, state, this.getSubProps());
-            executeOperation(this,command)
+            executeOperation(this, command)
           }
 
         }
 
-      listenEvent = (eventsConfigs) => {
-        var subjet = {};
-        for(let key in this.events) {
-          subjet[key] = this.eventManager;
+        listenEvent = (eventsConfigs) => {
+          var subjet = {};
+          for (let key in this.events) {
+            subjet[key] = this.eventManager;
+          }
+
+          return subjet
+
         }
-
-        return subjet
-
-      }
 
         runChildBuilder() {
           const { render, ...restProps } = this.props;
@@ -193,11 +193,12 @@ function createFunctionalComponent({
           return render(restProps, state)
         }
 
-        render(){
+        render() {
           return createElement(type, {
-            className: this.classNameController ? this.classNameController() :'',
-            id: id ? id():'',
-            'aria-label': ariaLabel? ariaLabel():'', ...this.listenEvent(this.events) }, 
+            className: this.classNameController ? this.classNameController() : '',
+            id: id ? id() : '',
+            'aria-label': ariaLabel ? ariaLabel() : '', ...this.listenEvent(this.events)
+          },
             this.runChildBuilder());
         }
       }
@@ -207,25 +208,36 @@ function createFunctionalComponent({
 
     // some function need to be exectuted and return primive value such number or string 
     // concern class, id, aria 
-    return createElement(type, { 
-      className: className ? className():'',
-      id: id ? id():'',
-      'aria-label': ariaLabel? ariaLabel():'',
-       ...finalProps },
-        children );
+    return createElement(type, {
+      className: className ? className() : '',
+      id: id ? id() : '',
+      'aria-label': ariaLabel ? ariaLabel() : '',
+      ...finalProps
+    },
+      children);
   }
-  
-  return wrappeComponent; 
- 
+
+  return wrappeComponent;
+
 }
 
 
-function mapEventTypeToHandler(type){
-  switch(type){
+function mapEventTypeToHandler(type) {
+  switch (type) {
     case 'click':
       return 'onClick'
     case 'mouseover':
       return 'onMouseOver';
+    case 'mouseleave':
+      return 'onMouseLeave';
+    case 'mousedown':
+      return 'onMouseDown';
+    case 'mouseup':
+      return 'onMouseUp';
+    case 'blur':
+      return 'onBlur';
+    case 'doubleclick':
+      return 'onDoubleClick';
     default:
       return void 0;
   }

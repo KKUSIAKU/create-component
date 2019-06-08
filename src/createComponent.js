@@ -132,7 +132,7 @@ function createFunctionalComponent({
             ...state
           }
           this.events = getEventHandlers(finalProps);
-          const { render } = this.props;
+          const { render, ...instanceProps } = this.props;
           invariant(
             render,
             'Expected render function to build content'
@@ -141,6 +141,7 @@ function createFunctionalComponent({
           this.loaded = false;
           this.updateCount = 0;
           this.classNameController = className || function () { return '' }; //new AbortController();
+          this.instanceProps = instanceProps;
         }
         componentDidMount() {
           Object.defineProperty(this, 'loaded', {
@@ -197,7 +198,8 @@ function createFunctionalComponent({
           return createElement(type, {
             className: this.classNameController ? this.classNameController() : '',
             id: id ? id() : '',
-            'aria-label': ariaLabel ? ariaLabel() : '', ...this.listenEvent(this.events)
+            'aria-label': ariaLabel ? ariaLabel() : '', ...this.listenEvent(this.events),
+            ...this.instanceProps
           },
             this.runChildBuilder());
         }

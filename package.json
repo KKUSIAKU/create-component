@@ -2,7 +2,7 @@
   "name": "createComponent",
   "version": "1.0.0",
   "description": "react user interface component",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "dev": "webpack-dev-server --config webpack.dev.js",
     "test": "jest --watchAll --coverage",

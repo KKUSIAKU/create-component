@@ -13,17 +13,9 @@ const supportedEventRegistry = {
 
 export function getEventHandlers(registry) {
   var eventListeners = {},
-    registryKeys = Object.keys(registry);
-
-
-  if (!registryKeys.length) return eventListeners;
-
-
+    registryKeys = Object.keys(registry).filter( key => supportedEventRegistry.hasOwnProperty(key));
   for (let key of registryKeys) {
-    if (supportedEventRegistry[key]) eventListeners[key] = registry[key]
+     eventListeners[key] = registry[key]
   }
-
   return eventListeners;
-
-
 }

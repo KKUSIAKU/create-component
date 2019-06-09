@@ -82,6 +82,15 @@ const matcher = {
 // while the component is mount those functions will fired this setState when called 
 // to update the component
 
+/**
+ * 
+ * @param {object} [opitons={}]
+ * @param {function} opitons.createElement Factory function to set type and props to pass to React.createElement
+ * @param {string} options.type The DOM node type to create 
+ * @param {object} [options.config ={}] A config object used by options.createElement 
+ * @return {function|class} React Component
+ */
+
 function createFunctionalComponent({
   createElement = React.createElement,
   type = 'div',
@@ -124,7 +133,11 @@ function createFunctionalComponent({
         'You are trying to build a stateful component with creatComponent method' +
         'with children props. Provide render method props instead to buil the DOM rendered children '
       )
-
+        /**
+         * React class component
+         * @param {function} render 
+         * 
+         */
       class Component extends React.Component {
         constructor(props) {
           super(props);
@@ -132,7 +145,7 @@ function createFunctionalComponent({
             ...state
           }
           this.events = getEventHandlers(finalProps);
-          const { render, ...instanceProps } = this.props;
+          const { render, autoFocus, refCallback, ...instanceProps } = this.props;
           invariant(
             render,
             'Expected render function to build content'
@@ -142,29 +155,44 @@ function createFunctionalComponent({
           this.updateCount = 0;
           this.classNameController = className || function () { return '' }; //new AbortController();
           this.instanceProps = instanceProps;
+          // this.refCallback = refCallback ;
+          // this.refTapable = function (element) {
+          //   if(this.refCallback){
+          //     void element.current.apply()
+          //   }
+          // }
+
+          this.domNodeReference;
+          this.autoFocus = autoFocus || false;
+          this.nullFunction = function nullFunction() {};
+          this.refCallback = this.refCallback.bind(this);
         }
+
         componentDidMount() {
           Object.defineProperty(this, 'loaded', {
             value: true
           });
-
+          
+          if(this.autoFocus){
+            this.domNodeReference.focus()
+          }
         }
 
         getSubProps() {
           let {
             loaded,
             updateCount,
-            classNameController
+            classNameController,
+            domNodeReference
           } = this;
 
           return {
             loaded,
             updateCount,
-            className: classNameController()
+            className: classNameController(),
+            domNodeReference
           }
         }
-
-
 
         eventManager(e) {
           let eventType = e.type;
@@ -172,6 +200,8 @@ function createFunctionalComponent({
           let callback = events[mapEventTypeToHandler(eventType)];
           e.preventDefault();
           if (callback) {
+            // need some attention to not break dom manipulation 
+            // as focusing on update
             let command = callback(props, state, this.getSubProps());
             executeOperation(this, command)
           }
@@ -194,11 +224,35 @@ function createFunctionalComponent({
           return render(restProps, state)
         }
 
+        setNodeProps = () => {
+          let props = {};
+          let settings = {
+            className:this.classNameController,
+            id:id,
+            'aria-label': ariaLabel ,
+          }
+          Object.keys(settings)
+          .filter(key => settings[key])
+          .forEach(key => {
+            props[key]= settings[key]()
+          })
+          return props;
+        }
+
+        // the ref will receive here DOM node 
+        // the ref passed as  props will be passed direct to DOM 
+        // will ref pass during config could be set to passed ref on react compoent
+        refCallback = (e) => {
+          this.domNodeReference = e;
+        }
+
+
+
         render() {
           return createElement(type, {
-            className: this.classNameController ? this.classNameController() : '',
-            id: id ? id() : '',
-            'aria-label': ariaLabel ? ariaLabel() : '', ...this.listenEvent(this.events),
+            ref:this.refCallback,
+            ...this.setNodeProps(),
+            ...this.listenEvent(this.events),
             ...this.instanceProps
           },
             this.runChildBuilder());

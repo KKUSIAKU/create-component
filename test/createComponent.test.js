@@ -313,4 +313,18 @@ describe('createComponent function test', () => {
 
   })
 
+
+  describe('Instance props testing', () => {
+    it('Expect unit test ', () => {
+      expect(true).to.equal(false)
+    })
+  })
+
+  describe('Dom node ref set testing', () => {
+    it('Expect unit test ', () => {
+      expect(true).to.equal(false)
+    })
+  })
+
+
 })

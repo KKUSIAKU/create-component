@@ -1,13 +1,26 @@
 
+// https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement
+// see above link for event list information 
 const supportedEventRegistry = {
+  // focus events 
   onBlur: 'onBlur',
+  onFocus: 'onFocus',
+  onFocusIn:'onFocusIn',
+  onFocusOut:'onFocusOut',
+
+  // mouse events 
   onClick: 'onClick',
   onDoubleClick: 'onDoubleClick',
-  onFocus: 'onFocus',
   onMouseOver: 'onMouseOver',
   onMouseLeave: 'onMouseLeave',
   onMouseDown: 'onMouseDown',
   onMouseUp: 'onMouseUp',
+
+  // forms related events 
+  onChange: 'onChange',
+  onInput:'onInput',
+
+
 
 }
 

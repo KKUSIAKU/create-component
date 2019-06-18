@@ -1,6 +1,6 @@
 import React from 'react';
 import invariant from 'invariant';
-import { isFunction, isPrimitive } from 'util';
+import { isFunction, isPrimitive, inherits, _extends } from 'util';
 import executeOperation from './executeOperation';
 import { getEventHandlers } from './eventMapper';
 var REACT_TYPED_ELEMENT = 'REACT_TYPED_ELEMENT';
@@ -74,6 +74,39 @@ const matcher = {
   mousedown: createInterActiveElement.bind(null, 'onMouseDown')
 }
 
+
+/*
+* @private
+* Mixins various prop in statefull component on wrapped component
+* @return {undefined}
+*/
+function constructorMixins(className, finalProps){
+ this.events = getEventHandlers(finalProps);
+ const { render, autoFocus, refCallback, ...instanceProps } = this.props;
+ 
+ // decorate may be to avoid error in case of input , textarea ...
+ // and add function that retrun null to test 
+ invariant(
+   render,
+   'Expected render function to build content'
+ )
+ this.loaded = false;
+ this.updateCount = 0;
+ this.classNameController = className || function () { return '' }; //new AbortController();
+ this.instanceProps = instanceProps;
+ // this.refCallback = refCallback ;
+ // this.refTapable = function (element) {
+ //   if(this.refCallback){
+ //     void element.current.apply()
+ //   }
+ // }
+
+ this.domNodeReference;
+ this.autoFocus = autoFocus || false;
+ this.nullFunction = function nullFunction() {};
+};
+
+
 // provide an api for setting css and forward props, reference ...
 // style or css for adding class 
 // data for setting data attribute 
@@ -144,27 +177,32 @@ function createFunctionalComponent({
           this.state = {
             ...state
           }
-          this.events = getEventHandlers(finalProps);
-          const { render, autoFocus, refCallback, ...instanceProps } = this.props;
-          invariant(
-            render,
-            'Expected render function to build content'
-          )
-          this.eventManager = this.eventManager.bind(this)
-          this.loaded = false;
-          this.updateCount = 0;
-          this.classNameController = className || function () { return '' }; //new AbortController();
-          this.instanceProps = instanceProps;
-          // this.refCallback = refCallback ;
-          // this.refTapable = function (element) {
-          //   if(this.refCallback){
-          //     void element.current.apply()
-          //   }
-          // }
+         //  this.events = getEventHandlers(finalProps);
+          
+          constructorMixins.call(this,className,finalProps)
+          
+          // const { render, autoFocus, refCallback, ...instanceProps } = this.props;
+          // invariant(
+          //   render,
+          //   'Expected render function to build content'
+          // )
 
-          this.domNodeReference;
-          this.autoFocus = autoFocus || false;
-          this.nullFunction = function nullFunction() {};
+          // this.loaded = false;
+          // this.updateCount = 0;
+          // this.classNameController = className || function () { return '' }; //new AbortController();
+          // this.instanceProps = instanceProps;
+          // // this.refCallback = refCallback ;
+          // // this.refTapable = function (element) {
+          // //   if(this.refCallback){
+          // //     void element.current.apply()
+          // //   }
+          // // }
+
+          // this.domNodeReference;
+          // this.autoFocus = autoFocus || false;
+          // this.nullFunction = function nullFunction() {};
+
+          this.eventManager = this.eventManager.bind(this);
           this.refCallback = this.refCallback.bind(this);
         }
 
@@ -259,8 +297,11 @@ function createFunctionalComponent({
         }
       }
 
+      //inherits(Component,)
+
       return Component;
     }
+
 
     // some function need to be exectuted and return primive value such number or string 
     // concern class, id, aria 
@@ -294,6 +335,14 @@ function mapEventTypeToHandler(type) {
       return 'onBlur';
     case 'doubleclick':
       return 'onDoubleClick';
+    case 'change':
+      return 'onChange';
+    case 'input':
+      return 'onInput';
+    case 'focusin':
+      return 'onFocusIn';
+    case 'focusout':
+      return 'onFocusOut';
     default:
       return void 0;
   }

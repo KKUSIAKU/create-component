@@ -32,3 +32,28 @@ export function getEventHandlers(registry) {
   }
   return eventListeners;
 }
+
+const supportedEventPropsRegistry ={
+  
+    blur: 'onBlur',
+    focus: 'onFocus',
+    focusin:'onFocusIn',
+    focusout:'onFocusOut',
+  
+    // mouse events 
+    click: 'onClick',
+    doubleclick: 'onDoubleClick',
+    mouseover: 'onMouseOver',
+    mouseleave: 'onMouseLeave',
+    mousedown: 'onMouseDown',
+    mouseup: 'onMouseUp',
+  
+    // forms related events 
+    change: 'onChange',
+    input:'onInput',
+}
+
+
+export function mapEventTypeToHandler(type) {
+  return supportedEventPropsRegistry[type] ;
+}

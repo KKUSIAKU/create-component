@@ -30,6 +30,7 @@ import * as action from './constants';
   // )
   if(args && args.type === action.UPDATE){
    void  classOperation(context,args);
+   void valueOperation(context,args)
     
   }
   context.updateCount = context.updateCount +1;
@@ -42,6 +43,14 @@ const classOperation  = (context, args) => {
   if(args.target =='className'){
     context.classNameController = function () {
       return args.value;
+    }
+  }
+}
+
+const valueOperation = (context, args) => {
+  if(args.target ==='value') {
+    context.valueController =  function (){
+      return args.value
     }
   }
 }

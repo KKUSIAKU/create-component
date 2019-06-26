@@ -17,6 +17,15 @@ var syntheticEvent = {
   type:'click',
   preventDefault:() => null
 }
+var focusEvent = {
+  type:'focus',
+  preventDefault:() => null
+}
+
+var changeEvent = {
+  type:'change',
+  preventDefault:() => null
+}
 
 function getError(func){
   try{
@@ -27,6 +36,13 @@ function getError(func){
   }
 }
 
+
+function createSyntheticEvent(type) {
+  return {
+    type, 
+    preventDefault:() => null
+  }
+}
 
 describe('createComponent function test', () => {
 
@@ -314,17 +330,97 @@ describe('createComponent function test', () => {
   })
 
 
-  describe('Instance props testing', () => {
-    it('Expect unit test ', () => {
-      expect(true).to.equal(false)
+  describe('createComponent testing user interactive input component', () => {
+
+    // should render controlled component and not just simply statefull component 
+    // - checkt that the component is statefull and do not reauire render function 
+    // - check the rendering 
+    // check that controlled component in rendered on specific tag such as input, select, texteara ...
+    //  check for the case of input that the value is  change and reference is difference 
+    // build other element 
+
+    it('Should not throws if render props is not set unlike general statefull component', () => {
+      let setting = { type:'input', config:{class:'class initial value', focus:() => ({type:'UPDATE',target:'className',value:'class new value'})}};
+      let Element = createComponent(setting)({state:{}});
+      expect(() => shallow(<Element/>)).to. not.throws()
+    })
+
+    it('Should set default value ', () => {
+      var Component;
+      let setting = { type:'input', config:{class:'class initial value', change:() => null}};
+      let Element = createComponent(setting)({state:{}});
+      let defaultValue = 'inputValue';
+      let componentRenderSpy = sinon.spy(Element.prototype,'render');
+      Component = <Element  defaultValue={defaultValue}/>;
+      let  renderedComponent = shallow(Component)
+      expect(componentRenderSpy.called).to.equal(true);
+      expect(componentRenderSpy.callCount).to.equal(1)
+      expect(renderedComponent.render().val()).to.equal(defaultValue)
+    })
+
+    it('Should re-render on change event ', () => {
+      var Component;
+      let setting = { type:'input', config:{class:'class initial value', change:() => ({type:'UPDATE',target:'value',value:'new input value'})}};
+      let changeEventSpy = sinon.spy(setting.config,'change');
+      
+      let Element = createComponent(setting)({state:{}});
+      let defaultValue = 'inputValue';
+      let componentRenderSpy = sinon.spy(Element.prototype,'render');
+      
+      Component = <Element  defaultValue={defaultValue}/>;
+      let  renderedComponent = shallow(Component)
+      expect(componentRenderSpy.called).to.equal(true);
+      expect(componentRenderSpy.callCount).to.equal(1)
+      expect(renderedComponent.render().val()).to.equal(defaultValue)
+      renderedComponent.simulate('change', changeEvent)
+      expect(changeEventSpy.called).to.equal(true)
+      expect(renderedComponent.render().val()).to.equal('new input value');
+      expect(componentRenderSpy.callCount).to.equal(2)
+    })
+
+    it('Should accept and re-render on focus event ', () => {
+      var Component;
+      let setting = { type:'input', config:{class:'class initial value', change:() => null, focus:() => ({type:'UPDATE',target:'value',value:'new input value'})}};
+      let Element = createComponent(setting)({state:{}});
+      Component = <Element  />;
+      let  renderedComponent = shallow(Component)
+      renderedComponent.simulate('focus', focusEvent)
+      expect(renderedComponent.render().val()).to.equal('new input value')
+    })
+
+    describe('When disabled Interactive should not handle click event', () => {
+
+      it('Could be disabled to receive input event ', () => {
+        var Component;
+        let setting = { type:'input', config:{class:'class initial value', change:() => null, click:() => null}};
+        let inputEventSpy = sinon.spy(setting.config,'click')
+        let Element = createComponent(setting)({state:{}});
+        Component = <Element disabled  />;
+      
+        let  renderedComponent = shallow(Component)
+      
+        renderedComponent.simulate('click', createSyntheticEvent('click'))
+        expect(inputEventSpy.called).to.equal(true);
+        expect(inputEventSpy.callCount).to.equal(1)
+      })
+    })
+
+    describe('Test on dom note element method as focus, disable, blur , see of standard method and provide them ,  ', () => {
+
+      it('Should autofocus when autoFocus props is provided ', () => {
+        var Component;
+        let setting = { type:'input', config:{class:'class initial value', change:() => null}};
+        let Element = createComponent(setting)({state:{}});
+        Component = <Element autoFocus  />;
+        let  renderedComponent = mount(Component)
+        const componentNode = renderedComponent.getDOMNode()
+        const ownerDocument = componentNode.ownerDocument;
+        const activeElement = ownerDocument.activeElement;
+   
+        expect(componentNode.isSameNode(activeElement)).to.equal(true)
+        renderedComponent.unmount();
+      })
     })
   })
-
-  describe('Dom node ref set testing', () => {
-    it('Expect unit test ', () => {
-      expect(true).to.equal(false)
-    })
-  })
-
 
 })

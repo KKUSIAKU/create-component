@@ -1,8 +1,9 @@
 import React from 'react';
 import invariant from 'invariant';
-import { isFunction, isPrimitive } from 'util';
+import { isFunction, isPrimitive, inherits, _extends } from 'util';
+import { controlledComponentTypes } from './utils'
 import executeOperation from './executeOperation';
-import { getEventHandlers } from './eventMapper';
+import { getEventHandlers, mapEventTypeToHandler } from './eventMapper';
 var REACT_TYPED_ELEMENT = 'REACT_TYPED_ELEMENT';
 
 /**
@@ -68,11 +69,40 @@ const matcher = {
   blur: createInterActiveElement.bind(null, 'onBlur'),
   doubleclick: createInterActiveElement.bind(null, 'onDoubleClick'),
   focus: createInterActiveElement.bind(null, 'onFocus'),
+  focusin:createInterActiveElement.bind(null,'onFocusIn'),
+  focusout:createInterActiveElement.bind(null,'onFocusOut'),
   mouseover: createInterActiveElement.bind(null, 'onMouseOver'),
   mouseleave: createInterActiveElement.bind(null, 'onMouseLeave'),
   mouseup: createInterActiveElement.bind(null, 'onMouseUp'),
-  mousedown: createInterActiveElement.bind(null, 'onMouseDown')
+  mousedown: createInterActiveElement.bind(null, 'onMouseDown'),
+
+  // input specific events
+  change:createInterActiveElement.bind(null,'onChange'),
+  input:createInterActiveElement.bind(null,'onInput')
 }
+
+
+/*
+* @private
+* Mixins various prop in statefull component on wrapped component
+* @return {undefined}
+*/
+function constructorMixins(className, finalProps){
+ this.events = getEventHandlers(finalProps);
+ // value and defaultValue are extracted to avoid setting twice those on interactive element 
+ const { render, autoFocus, refCallback, value,defaultValue,...instanceProps } = this.props;
+ 
+ // decorate may be to avoid error in case of input , textarea ...
+ // and add function that retrun null to test 
+ this.loaded = false;
+ this.updateCount = 0;
+ this.classNameController = className || function () { return '' }; //new AbortController();
+ this.instanceProps = instanceProps;
+ this.domNodeReference;
+ this.autoFocus = autoFocus || false;
+ this.nullFunction = function nullFunction() {};
+};
+
 
 // provide an api for setting css and forward props, reference ...
 // style or css for adding class 
@@ -127,44 +157,139 @@ function createFunctionalComponent({
     const { children, state } = arg;
 
     if (state) {
-      // create statefull component and return the new function 
-      invariant(
-        !children,
-        'You are trying to build a stateful component with creatComponent method' +
-        'with children props. Provide render method props instead to buil the DOM rendered children '
-      )
+
+      
         /**
          * React class component
-         * @param {function} render 
+         * @param {function} UserInterActiveInput
          * 
          */
-      class Component extends React.Component {
+      
+      class UserInterActiveInput extends React.Component {
+
         constructor(props) {
           super(props);
           this.state = {
             ...state
           }
-          this.events = getEventHandlers(finalProps);
-          const { render, autoFocus, refCallback, ...instanceProps } = this.props;
-          invariant(
-            render,
-            'Expected render function to build content'
-          )
-          this.eventManager = this.eventManager.bind(this)
-          this.loaded = false;
-          this.updateCount = 0;
-          this.classNameController = className || function () { return '' }; //new AbortController();
-          this.instanceProps = instanceProps;
-          // this.refCallback = refCallback ;
-          // this.refTapable = function (element) {
-          //   if(this.refCallback){
-          //     void element.current.apply()
-          //   }
-          // }
+         //  this.events = getEventHandlers(finalProps);
+          let { defaultValue , value } = this.props;
+          constructorMixins.call(this,className,finalProps);
+          this.valueController = function () { return defaultValue || value || ''}
 
-          this.domNodeReference;
-          this.autoFocus = autoFocus || false;
-          this.nullFunction = function nullFunction() {};
+          this.eventManager = this.eventManager.bind(this);
+          this.refCallback = this.refCallback.bind(this);
+        }
+
+        componentDidMount() {
+          Object.defineProperty(this, 'loaded', {
+            value: true
+          });
+          
+          if(this.autoFocus){
+            this.domNodeReference.focus()
+          }
+        }
+
+        getSubProps() {
+          let {
+            loaded,
+            updateCount,
+            classNameController,
+            domNodeReference
+          } = this;
+
+          return {
+            loaded,
+            updateCount,
+            className: classNameController(),
+            domNodeReference
+          }
+        }
+
+        eventManager(e) {
+          let eventType = e.type;
+          const { events, props, state } = this;
+          let callback = events[mapEventTypeToHandler(eventType)];
+          e.preventDefault();
+          if (callback) {
+            // need some attention to not break dom manipulation 
+            // as focusing on update
+            let command = callback(props, state, this.getSubProps());
+            executeOperation(this, command)
+          }
+
+        }
+
+        listenEvent = (eventsConfigs) => {
+          var subjet = {};
+          for (let key in this.events) {
+            subjet[key] = this.eventManager;
+          }
+
+          return subjet
+
+        }
+
+        // runChildBuilder() {
+        //   const { render, ...restProps } = this.props;
+        //   const { state } = this;
+        //   return render(restProps, state)
+        // }
+
+        setNodeProps = () => {
+          let props = {};
+          let settings = {
+            className:this.classNameController,
+            id:id,
+            'aria-label': ariaLabel ,
+            value:this.valueController
+          }
+          Object.keys(settings)
+          .filter(key => settings[key])
+          .forEach(key => {
+            props[key]= settings[key]()
+          })
+          return props;
+        }
+
+        // the ref will receive here DOM node 
+        // the ref passed as  props will be passed direct to DOM 
+        // will ref pass during config could be set to passed ref on react compoent
+        refCallback = (e) => {
+          this.domNodeReference = e;
+        }
+
+        render(){
+          return React.createElement(
+          type, {
+            ref:this.refCallback,
+            ...this.setNodeProps(),
+            ...this.listenEvent(this.events),
+            ...this.instanceProps
+
+          }
+          )
+        }
+      }
+
+
+        /**
+         * React class component
+         * @param {function} render 
+         * 
+         */
+       class Component extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = {
+            ...state
+          }
+         //  this.events = getEventHandlers(finalProps);
+          
+          constructorMixins.call(this,className,finalProps)
+
+          this.eventManager = this.eventManager.bind(this);
           this.refCallback = this.refCallback.bind(this);
         }
 
@@ -246,8 +371,6 @@ function createFunctionalComponent({
           this.domNodeReference = e;
         }
 
-
-
         render() {
           return createElement(type, {
             ref:this.refCallback,
@@ -259,8 +382,21 @@ function createFunctionalComponent({
         }
       }
 
-      return Component;
+      //inherits(Component,)
+
+      if(controlledComponentTypes.hasOwnProperty(type)){
+        return UserInterActiveInput
+      }else {
+              // create statefull component and return the new function 
+      invariant(
+        !children,
+        'You are trying to build a stateful component with creatComponent method' +
+        'with children props. Provide render method props instead to buil the DOM rendered children '
+      )
+        return Component;
+      }
     }
+
 
     // some function need to be exectuted and return primive value such number or string 
     // concern class, id, aria 
@@ -278,25 +414,4 @@ function createFunctionalComponent({
 }
 
 
-function mapEventTypeToHandler(type) {
-  switch (type) {
-    case 'click':
-      return 'onClick'
-    case 'mouseover':
-      return 'onMouseOver';
-    case 'mouseleave':
-      return 'onMouseLeave';
-    case 'mousedown':
-      return 'onMouseDown';
-    case 'mouseup':
-      return 'onMouseUp';
-    case 'blur':
-      return 'onBlur';
-    case 'doubleclick':
-      return 'onDoubleClick';
-    default:
-      return void 0;
-  }
-
-}
 export default createFunctionalComponent;

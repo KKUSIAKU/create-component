@@ -1,9 +1,13 @@
 import React from 'react';
 import invariant from 'invariant';
-import { isFunction, isPrimitive, inherits, _extends } from 'util';
+import { isElement, isValidElementType} from 'react-is';
+import { isFunction, isPrimitive,isString, inherits, _extends } from 'util';
 import { controlledComponentTypes } from './utils'
 import executeOperation from './executeOperation';
 import { getEventHandlers, mapEventTypeToHandler } from './eventMapper';
+import compose from './compose';
+import exceptionMessage from './exception';
+
 var REACT_TYPED_ELEMENT = 'REACT_TYPED_ELEMENT';
 
 /**
@@ -121,7 +125,7 @@ function constructorMixins(className, finalProps){
  * @return {function|class} React Component
  */
 
-function createFunctionalComponent({
+function createComponent({
   createElement = React.createElement,
   type = 'div',
   config = {},
@@ -130,15 +134,15 @@ function createFunctionalComponent({
 } = {}) {
 
   invariant(
-    !(!Boolean(type) && !Boolean(component)),
+    Boolean(type),
     'createComponent expects one of  `type` or `component` input opitons'
   )
 
-  invariant(
-    !(Boolean(type) && Boolean(component)),
-    'CreateComponent called with forbiden input. You are trying to use both type and component together. Use only one.' +
-    'type should correspond a valid HTMLS tagName and component must be a react element constructor function or class'
-  );
+  // invariant(
+  //   !(Boolean(type) && Boolean(component)),
+  //   'CreateComponent called with forbiden input. You are trying to use both type and component together. Use only one.' +
+  //   'type should correspond a valid HTMLS tagName and component must be a react element constructor function or class'
+  // );
 
   let $element, _props;
 
@@ -154,9 +158,10 @@ function createFunctionalComponent({
 
   function wrappeComponent(arg) {
 
-    const { children, state } = arg;
+    const { children, state,context } = arg;
 
-    if (state) {
+    // need to split this 
+    if (state || context) {
 
       
         /**
@@ -382,7 +387,156 @@ function createFunctionalComponent({
         }
       }
 
+      let contextComponentApi = {};
+
+      if(context ){
+       // console.log('#################################################')
+        // state = state || {};
+      
+        // create context 
+        // The Provider here 
+        let defaultContextValues  = context.defaultContextValues || {}
+        const DefaultContext = React.createContext(defaultContextValues);
+        
+        class Provider extends React.Component{
+          constructor(props){
+            super(props);
+            const { contextValues, children } = this.props;
+        
+           // subscribe to statefull or event emitter object to update
+           // the provider state, for now just static provider 
+            this.state = {
+              ...contextValues
+            }
+          }
+        
+          render(){
+            const { children } = this.props;
+            invariant(
+              children, 
+              exceptionMessage.noChildFound
+            )
+          
+            const Context = this.props.context || DefaultContext;
+            return (
+              <Context.Provider value={Object.freeze(this.state)}>
+              {this.props.children}
+              </Context.Provider>  
+            ) 
+          }
+        }
+
+
+        function selectConsumerFuncs(keys, context){
+          var funcs = {};
+         // console.log(' in selectConsumerFunc ', keys, context)
+          for(var key in keys ){
+            invariant(
+              context[key],
+              `You have provided a context Consumer a ${key} prop but none could be find in context`
+            )
+            
+            invariant(
+              isString(key) || isBoolean(key),
+              `${key} must be boolean or string`
+            )
+           funcs[key] = context[key];// reference here 
+          }
+        
+          return funcs;
+        }
+        
+        // could be move outside easily
+        function setModifierFunction(arg){
+          invariant(
+            isFunction(arg) || isString(arg),
+            `Consumer wrapper component expect function or string. Instead ${ typeof arg} is passed in!`
+          )
+      
+          if(isFunction(arg)){
+            return function (str) { return arg().trim().concat(' ', str.trim()).trim()}
+          }
+      
+          return function(str) { return arg.trim().concat(' ', str.trim()).trim()}
+        
+      }
+        
+
+      /**
+       * Default that set only Provider for className 
+       * 
+       * @param {*} props 
+       */
+        function ConsumerWrapper(props){
+          className = '';
+          // passe the modifier into props 
+        
+        
+          let { children, ...utilities } = props; 
+         // console.log('calling consumer wrappers', utilities)
+        
+          let classNameModifiers = Object.values(utilities).map( func => { 
+            return  setModifierFunction( func) 
+          });
+        
+          const innerContentProps = { 
+            className : compose(...classNameModifiers)(className)
+          }
+
+          // any props ass className could consume it props context settings 
+          // but which props except className could be usefull for this ?
+        
+          // generic props to pass to 
+          
+          // return (
+          //   <div {...innerContentProps}>
+          //     {children}
+          //   </div>
+          // )
+
+          return  createElement(type, { ...innerContentProps }, children);
+        }
+        
+        
+        function ProviderConsumer( props){
+          const { context, children,wrapper, ...otherProps } = props;
+          const { Consumer } = context || DefaultContext;
+          // the props of the wrapper is limited to the provider value 
+          const Wrapper = wrapper || ConsumerWrapper;
+        
+          // Double doors check on wrapper
+          invariant(
+            isValidElementType(Wrapper), 
+            'Consumer expects valid React element as wrapper.'+
+            `Instead got ${typeof Wrapper}`
+          )
+
+          invariant(
+            isElement(<Wrapper/>), 
+            'Consumer expects valid React element as wrapper.'+
+            `Instead got ${typeof Wrapper}`
+          )
+        
+          // Reomve JSX 
+          return (
+            <Consumer>
+              {utility => { 
+              const  funcs = selectConsumerFuncs(otherProps, utility)
+              return <Wrapper {...funcs}> {children} </Wrapper>
+            }}
+            </Consumer>
+          )
+        }
+
+        contextComponentApi.Provider = Provider;
+        contextComponentApi.Consumer = ProviderConsumer;
+      }
+
       //inherits(Component,)
+      if(context){
+       // console.log('here ')
+        return contextComponentApi;
+      }
 
       if(controlledComponentTypes.hasOwnProperty(type)){
         return UserInterActiveInput
@@ -397,6 +551,29 @@ function createFunctionalComponent({
       }
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  //  console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
 
     // some function need to be exectuted and return primive value such number or string 
     // concern class, id, aria 
@@ -414,4 +591,5 @@ function createFunctionalComponent({
 }
 
 
-export default createFunctionalComponent;
+
+export default createComponent;

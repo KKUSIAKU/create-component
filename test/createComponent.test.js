@@ -1,6 +1,12 @@
 import { expect 
 } from 'chai'
 import { shallow, mount, render } from 'enzyme'; 
+import { 
+   isElement,
+   isContextConsumer,
+   isContextProvider
+ }
+    from 'react-is';
 import sinon from 'sinon';
 import createComponent from '../src/createComponent';
 import * as ReactIs from 'react-is';
@@ -326,6 +332,23 @@ describe('createComponent function test', () => {
       actualClassCheck =renderedComponent.hasClass('class new value')
       expect(expectedClassCheck).to.equal(actualClassCheck)
     })
+    it('should allow autofocus just after component mount ', () => {
+      // strangely this test make appaears uncovered line that does not exists before 
+      // kind of behavoir to understand
+      var Component;
+      let setting = { type:'button', config:{class:'class initial value', focus:() => null,click:() => ({type:'UPDATE',target:'className',value:'class new value'})}};
+      let Element = createComponent(setting)({state:{}});
+      Component = <Element autoFocus  render={() =><div>header</div>} />;
+      let  renderedComponent = mount(Component)
+      const componentNode = renderedComponent.getDOMNode();
+      //console.log(componentNode)
+      const ownerDocument = componentNode.ownerDocument;
+      const activeElement = ownerDocument.activeElement;
+     // console.log(activeElement)
+ 
+       expect(componentNode.isSameNode(activeElement)).to.equal(true)
+       renderedComponent.unmount();
+    })
 
   })
 
@@ -407,6 +430,7 @@ describe('createComponent function test', () => {
 
     describe('Test on dom note element method as focus, disable, blur , see of standard method and provide them ,  ', () => {
 
+
       it('Should autofocus when autoFocus props is provided ', () => {
         var Component;
         let setting = { type:'input', config:{class:'class initial value', change:() => null}};
@@ -418,9 +442,151 @@ describe('createComponent function test', () => {
         const activeElement = ownerDocument.activeElement;
    
         expect(componentNode.isSameNode(activeElement)).to.equal(true)
+       // renderedComponent.simulate('click',createSyntheticEvent('click'))
+       // renderedComponent.simulate('focus',createSyntheticEvent('focus'))
         renderedComponent.unmount();
       })
     })
+  })
+
+  describe(' Create component return a provider api component ', () =>{
+
+    it('Should return an object with Provider, Consummer Api',() =>{
+      const ContextElement = createComponent()({context:{}})
+      //console.log(ContextElement)
+      expect(ContextElement.hasOwnProperty('Provider')).to.equal(true);
+      expect(ContextElement.hasOwnProperty('Consumer')).to.equal(true);
+      // expect(isContextProvider(ContextElement.Provider)).to.equal(true);
+      // expect(isContextConsumer(ContextElement.Consumer)).to.equal(true);
+      
+    })
+
+
+    it('The Provider Component should accept children ', () =>{
+      let ContextElement = createComponent()({context:{}})
+      let { Provider } = ContextElement;
+
+      expect(shallow(<Provider>
+        <div/>
+      </Provider>).children().length).to.equal(1);
+     
+     expect(shallow(<Provider>
+           <div/>
+           <div/>
+         </Provider>).children().length).to.equal(2);
+   })
+
+
+
+   it('The Provider should renders it children with no modification ', () => {
+    let ContextElement = createComponent()({context:{}})
+    let { Provider } = ContextElement;
+    
+    const children =[
+      <p key='one' className='border mg pd'> Content One </p>,
+      <p key='two' className='border mg pd'> Content two </p>,
+   ]
+    
+   const layout = shallow(<Provider>{children}</Provider>)
+    expect(layout.children().length).to.equal(children.length);
+    expect(layout.containsAllMatchingElements(children)).to.be.true;
+  })
+
+
+  it('The Provide should have context value prop when instantied', () => {
+
+    let ContextElement = createComponent()({context:{}})
+    let { Provider } = ContextElement;
+    const context = {
+      flex : () => 'd-flex',
+      wrap : () => 'flex-wrap',
+      direction : () => 'flex-row',
+      border : () => 'border',
+      row : () => 'row',
+     };
+
+
+    let provider = shallow(<Provider contextValues={{...context}}><div></div></Provider>);
+    let providerContext = provider.prop('value');
+    let keys = Object.keys(context);
+    keys.forEach( key => {
+      expect(providerContext[key]).to.equal(context[key])
+    })
+  })
+
+
+  describe('The context object api default testing ', () => {
+    let ContextElement = createComponent()({context:{
+      defaultContextValues:{values:true, obj:{}, arr:[], flex:'flex', wrap:() =>'wrap'}}
+    })
+    let { Provider, Consumer } = ContextElement;
+
+    it('should not throws when no props is passed in ', () =>{
+      expect(() => render( <Consumer />)).to.not.throws()
+    })
+
+    it('Should throws when passing  parameter not present in the context object', () =>{
+      expect(() => render( <Consumer do/>)).to.throws('You have provided a context Consumer a do prop but none could be find in context')
+    })
+
+    it('Shoud throws when props present in consumer (consumerwrapper) but not expected by consumer', ( ) => {
+      // basically the default consumer only buid up the className props from context
+      // And it expected only string or function. The function must return string 
+      // Test below does not means boolean, object ... could not be set as context object neither passed to consumer
+      // simply the current consumer does not expect those type of values to process 
+      expect(() => render( <Consumer values/>)).to.throws('Consumer wrapper component expect function or string. Instead boolean is passed in!')
+      expect(() => render( <Consumer obj/>)).to.throws('Consumer wrapper component expect function or string. Instead object is passed in!')
+      expect(() => render( <Consumer arr/>)).to.throws('Consumer wrapper component expect function or string. Instead object is passed in!')
+    })
+
+    it('should not throws when valid consumer props type is passed in ', () => {
+      expect(() => render( <Consumer flex />)).to.not.throws()
+      expect(() => render( <Consumer wrap/>)).to.not.throws()
+      expect(() => render( <Consumer flex  wrap/>)).to.not.throws()
+    })
+
+    it(' should set class attribute', () =>{
+      let renderedComponent = render( <Consumer flex  wrap/>)
+      expect(renderedComponent.hasClass('flex')).to.equal(true);
+      expect(renderedComponent.hasClass('wrap')).to.equal(true)
+    })
+
+  })
+
+
+    describe('The context consumer wrapper logic customisation ', () =>{
+      let context = {
+        defaultContextValues:{
+          values:true, 
+          obj:{},
+          arr:[],
+          flex:'flex',
+          wrap:() =>'wrap'}
+        }
+      let ContextElement = createComponent()({context})
+      let { Provider, Consumer } = ContextElement;
+    
+      it('Should allow to set custom Wrapper logic previous',() =>{
+        let wrapper = function () { return <div></div>};
+        let setting = { wrapper}
+        let spy = sinon.spy(setting, 'wrapper');
+        let renderedComponent = render( <Consumer flex  wrap {...setting}/>)
+        expect(spy.called).to.equal(true);
+        expect(spy.callCount).to.equal(1);
+
+        // unlike test default behavoir flex and wrap will have no effet 
+        // as wrapper do not use those props 
+        expect(renderedComponent.hasClass('flex')).to.equal(false);
+        expect(renderedComponent.hasClass('wrap')).to.equal(false)
+
+        // wrapper is called with flex and wrap props as those are from the context 
+        let {flex,wrap }= context.defaultContextValues;
+        expect(spy.calledWithMatch({flex,wrap})).to.equal(true)
+
+      })
+    })
+    
+
   })
 
 })

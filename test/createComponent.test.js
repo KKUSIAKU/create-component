@@ -233,6 +233,21 @@ describe('createComponent function test', () => {
      expect(actual).to.equal(expected);
      expect(actualCallCount).to.equal(expectedCallCount)
   })
+
+
+  it('should executed any update when there is no config setting ', () => {
+    let setting = { config:{ }};
+    let Component = createComponent(setting)({state:{}})
+    let renderSpy = sinon.spy(Component.prototype, 'render')
+    let renderedComponent =  shallow(<Component render={()=>null}/>)
+    renderedComponent.simulate('click', syntheticEvent);
+    let expected = true ,
+    actual = renderSpy.called,
+    actualCallCount = renderSpy.callCount,
+    expectedCallCount = 1;
+    expect(actual).to.equal(expected);
+    expect(actualCallCount).to.equal(expectedCallCount)
+  })
   })
 
 

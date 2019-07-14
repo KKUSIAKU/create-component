@@ -51,6 +51,9 @@ const supportedEventPropsRegistry ={
     // forms related events 
     change: 'onChange',
     input:'onInput',
+
+    // dimension event 
+    resize:'onResize'
 }
 
 

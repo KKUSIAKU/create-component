@@ -82,7 +82,10 @@ const matcher = {
 
   // input specific events
   change:createInterActiveElement.bind(null,'onChange'),
-  input:createInterActiveElement.bind(null,'onInput')
+  input:createInterActiveElement.bind(null,'onInput'),
+
+  // dimension 
+  resize:createInterActiveElement.bind(null,'onResize')
 }
 
 

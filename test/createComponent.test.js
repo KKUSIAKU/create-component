@@ -604,4 +604,38 @@ describe('createComponent function test', () => {
 
   })
 
+  describe('created component listening to event on document or window', ()=>{
+
+    it('testing window resize event ', ()=>{
+      // carefull the unmount seem not working correctely
+      var Component;
+      let setting = { config:{class:'class initial value', click:() => ({type:'UPDATE',target:'className',value:'class new value'})}};
+      let Element = createComponent(setting)({state:{}});
+
+      let dwEvents = {
+        resize:() => ({type:'UPDATE', target:'className',value:'class new value'}),
+        load:() => ({type:'UPDATE', target:'className',value:'class new value'})
+      }
+
+      let spyResize = sinon.spy(dwEvents,'resize');
+      let spyRender = sinon.spy(Element.prototype,'render');
+
+      Component = <Element dwEvents = {dwEvents} render={() =><div>header</div>} />;
+      let  renderedComponent = mount(Component)
+      const componentNode = renderedComponent.getDOMNode();
+      //console.log(componentNode)
+      const ownerDocument = componentNode.ownerDocument;
+      const window = ownerDocument.defaultView; 
+      console.log(renderedComponent.name())
+      window.dispatchEvent( new Event('resize'))
+      // console.log(ownerDocument)
+     // console.log(ownerDocument.defaultView)
+      expect(spyResize.called).to.equal(true);
+      expect(spyRender.called).to.equal(true);
+      expect(spyRender.callCount).to.equal(2)
+ 
+       renderedComponent.unmount();
+    })
+  })
+
 })

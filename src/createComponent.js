@@ -97,7 +97,8 @@ const matcher = {
 function constructorMixins(className, finalProps){
  this.events = getEventHandlers(finalProps);
  // value and defaultValue are extracted to avoid setting twice those on interactive element 
- const { render, autoFocus, refCallback, value,defaultValue,...instanceProps } = this.props;
+ const { render, autoFocus, refCallback, value,defaultValue, dwEvents,
+  ...instanceProps } = this.props;
  
  // decorate may be to avoid error in case of input , textarea ...
  // and add function that retrun null to test 
@@ -107,6 +108,7 @@ function constructorMixins(className, finalProps){
  this.instanceProps = instanceProps;
  this.domNodeReference;
  this.autoFocus = autoFocus || false;
+ this.dwEvents = dwEvents || {};
  this.nullFunction = function nullFunction() {};
 };
 
@@ -307,6 +309,7 @@ function createComponent({
 
           this.eventManager = this.eventManager.bind(this);
           this.refCallback = this.refCallback.bind(this);
+          this.globalEventManager = this.globalEventManager.bind(this)
         }
 
         componentDidMount() {
@@ -317,6 +320,10 @@ function createComponent({
           if(this.autoFocus){
             this.domNodeReference.focus()
           }
+          for (let event in this.dwEvents){
+            window[`on${event}`]= this.globalEventManager
+          }
+         // window.onresize = this.globalEventManager;
         }
 
         getSubProps() {
@@ -335,10 +342,22 @@ function createComponent({
           }
         }
 
+        // allow component to listen to event on top-level 
+        // window object
+        globalEventManager(e){
+          let eventType = e.type;
+          const { dwEvents, props, state } = this;
+          let callback = dwEvents[eventType] 
+          let command = callback(e,props, state, this.getSubProps(),);
+           executeOperation(this, command)
+        }
+
+
         eventManager(e) {
           let eventType = e.type;
           const { events, props, state } = this;
-          let callback = events[mapEventTypeToHandler(eventType)] 
+         // let callback = events[mapEventTypeToHandler(eventType)] 
+         let callback = Object.assign({},events)[mapEventTypeToHandler(eventType)] 
           e.preventDefault();
           let command = callback(props, state, this.getSubProps());
           executeOperation(this, command)

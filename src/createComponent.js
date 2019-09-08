@@ -66,6 +66,7 @@ export function createInterActiveElement(eventType, handler, element) {
 const matcher = {
   id: createAttributesElement.bind(null, 'id'),
   ariaLabel: createAttributesElement.bind(null, 'ariaLabel'),
+  ariaPressed:createAttributesElement.bind(null,'ariaPressed'),
   class: createAttributesElement.bind(null, 'className'),
 
   // mouse events 

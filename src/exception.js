@@ -1,6 +1,6 @@
-const noChildFound = '<LayoutProvider/> expects children props'
+const noChildFound = "<LayoutProvider/> expects children props";
 
 
 export default {
   noChildFound, 
-}
+};

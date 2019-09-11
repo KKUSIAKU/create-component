@@ -1,11 +1,11 @@
-import invariant from 'invariant';
-import * as action from './constants';
+import invariant from "invariant";
+import * as action from "./constants";
 
 /**
  * this is a central update factory on any event on component 
  */
 
- /**
+/**
   * 
   * @param {object} context  The context on which the method func property must be look for 
   * @param {string} method  A string corresponding to the context method to execute 
@@ -19,43 +19,43 @@ import * as action from './constants';
  * @param {*} args 
  * @param {*} callback 
  */
- function executeOperation(context,args,callback){
+function executeOperation(context,args){
   invariant(
     context, 
-    'This requires valid context on which to execute operation must be provide'
-  )
+    "This requires valid context on which to execute operation must be provide"
+  );
   // invariant(
   //   args.type, 
   //   'executeOperation helper function expect a type property on the second argument'
   // )
   if(args && args.type === action.UPDATE){
-   void  classOperation(context,args);
-   void valueOperation(context,args)
+    void  classOperation(context,args);
+    void valueOperation(context,args);
     
   }
   context.updateCount = context.updateCount +1;
-  context.setState({})
+  context.setState({});
 
- }
+}
 
 
 const classOperation  = (context, args) => {
-  if(args.target =='className'){
+  if(args.target =="className"){
     context.classNameController = function () {
       return args.value;
-    }
+    };
   }
-}
+};
 
 const valueOperation = (context, args) => {
-  if(args.target ==='value') {
+  if(args.target ==="value") {
     context.valueController =  function (){
-      return args.value
-    }
+      return args.value;
+    };
   }
-}
+};
 
 
 
 
- export default executeOperation;
+export default executeOperation;

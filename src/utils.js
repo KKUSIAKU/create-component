@@ -1,8 +1,8 @@
 
 
 export const controlledComponentTypes = {
-  input:'input',
-  select:'select',
-  textarea:'textarea'
+  input:"input",
+  select:"select",
+  textarea:"textarea"
 
-}
+};

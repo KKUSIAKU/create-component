@@ -1,4 +1,4 @@
 
-import createComponent from './createComponent';
+import createComponent from "./createComponent";
 
 export default createComponent;

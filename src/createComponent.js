@@ -1,7 +1,7 @@
 import React from 'react';
 import invariant from 'invariant';
 import { isElement, isValidElementType} from 'react-is';
-import { isFunction, isPrimitive,isString, inherits, _extends } from 'util';
+import { isFunction, isPrimitive,isString, _extends } from 'util';
 import { controlledComponentTypes } from './utils'
 import executeOperation from './executeOperation';
 import { getEventHandlers, mapEventTypeToHandler } from './eventMapper';
@@ -134,10 +134,7 @@ function constructorMixins(className, finalProps){
 function createComponent({
   createElement = React.createElement,
   type = 'div',
-  config = {},
-  element = {},
-  component = null
-} = {}) {
+  config = {}} = {}) {
 
   invariant(
     Boolean(type),
@@ -190,6 +187,7 @@ function createComponent({
 
           this.eventManager = this.eventManager.bind(this);
           this.refCallback = this.refCallback.bind(this);
+          this.listenEvent = this.listenEvent.bind(this)
         }
 
         componentDidMount() {
@@ -240,7 +238,7 @@ function createComponent({
 
         }
 
-        listenEvent = (eventsConfigs) => {
+        listenEvent = () => {
           var subjet = {};
           for (let key in this.events) {
             subjet[key] = this.eventManager;
@@ -371,7 +369,7 @@ function createComponent({
 
         }
 
-        listenEvent = (eventsConfigs) => {
+        listenEvent = () => {
           var subjet = {};
           for (let key in this.events) {
             subjet[key] = this.eventManager;
@@ -434,7 +432,7 @@ function createComponent({
         class Provider extends React.Component{
           constructor(props){
             super(props);
-            const { contextValues, children } = this.props;
+            const { contextValues } = this.props;
         
            // subscribe to statefull or event emitter object to update
            // the provider state, for now just static provider 
@@ -579,27 +577,6 @@ function createComponent({
         return Component;
       }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   //  console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')

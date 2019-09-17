@@ -287,4 +287,13 @@ export default {
   ARIAPropertyMap
 };
 
+export function isAriaRoles (label) {
+  let ariaKeys = [];
+  Object.keys(ARIARole).forEach(registry => ariaKeys.push(...Object.keys(registry)))
+  return ariaKeys.includes(label)
+}
+
+export function isAriaProperty (label) {
+  return Object.keys(ARIAPropertyMap).includes(label)
+}
 

@@ -1,5 +1,7 @@
 node_modules
 documentations
+coverage
 note.md
 src/note
 readme.md
+ viewsSpecification.md
